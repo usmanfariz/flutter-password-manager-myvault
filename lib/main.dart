@@ -11,12 +11,13 @@ class MyVaultApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'MyVault',
       theme: ThemeData(primarySwatch: Colors.blue),
       initialRoute: '/',
       routes: {
-        '/': (_) => AuthPage(),         // <- ini untuk autentikasi
-        '/vault': (_) => VaultPage(),   // <- akses setelah berhasil
+        '/': (_) => AuthPage(), // <- ini untuk autentikasi
+        '/vault': (_) => VaultPage(), // <- akses setelah berhasil
         '/add': (_) => AddPasswordPage(),
       },
     );
