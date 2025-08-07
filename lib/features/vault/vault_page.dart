@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/storage/secure_storage.dart';
 import 'password_model.dart';
-import '../../core/crypto/encryption_helper.dart';
 
 class VaultPage extends StatefulWidget {
   const VaultPage({Key? key}) : super(key: key);
@@ -13,7 +12,7 @@ class VaultPage extends StatefulWidget {
 
 class _VaultPageState extends State<VaultPage> {
   final SecureStorage storage = SecureStorage();
-  List<PasswordItem> passwordList = [];
+  List<PasswordModel> passwordList = [];
 
   @override
   void initState() {
@@ -21,23 +20,16 @@ class _VaultPageState extends State<VaultPage> {
     loadPasswords();
   }
 
-  void loadPasswords() async {
-  final data = await storage.readAll();
-  setState(() {
-    passwordList = data.entries.map((e) {
-      final decrypted = EncryptionHelper.decrypt(e.value);
-      final parts = decrypted.split('|');
-      return PasswordItem(
-        id: e.key,
-        title: parts[0],
-        username: parts[1],
-        password: parts[2],
-      );
+  Future<void> loadPasswords() async {
+    final data = await storage.readAll();
+    final items = data.entries.map((entry) {
+      return PasswordModel.fromEncrypted(entry.key, entry.value);
     }).toList();
-  });
-}
 
-  void deletePassword(String id) async {
+    setState(() => passwordList = items);
+  }
+
+  Future<void> deletePassword(String id) async {
     await storage.delete(id);
     loadPasswords();
   }
@@ -45,30 +37,55 @@ class _VaultPageState extends State<VaultPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("MyVault")),
-      body: ListView.builder(
-        itemCount: passwordList.length,
-        itemBuilder: (context, index) {
-          final item = passwordList[index];
-          return ListTile(
-            title: Text(item.title),
-            subtitle: Text(item.username),
-            trailing: IconButton(
-              icon: Icon(Icons.copy),
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: item.password));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Password copied')),
+      appBar: AppBar(title: const Text("MyVault")),
+      body: passwordList.isEmpty
+          ? const Center(child: Text('No saved passwords.'))
+          : ListView.builder(
+              itemCount: passwordList.length,
+              itemBuilder: (context, index) {
+                final item = passwordList[index];
+                return ListTile(
+                  title: Text(item.title),
+                  subtitle: Text(item.username),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.copy),
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: item.password));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Password copied')),
+                      );
+                    },
+                  ),
+                  onLongPress: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: const Text('Delete?'),
+                        content:
+                            Text('Are you sure to delete "${item.title}"?'),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel')),
+                          TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Delete')),
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      deletePassword(item.id);
+                    }
+                  },
                 );
               },
             ),
-            onLongPress: () => deletePassword(item.id),
-          );
-        },
-      ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () => Navigator.pushNamed(context, '/add'),
+        child: const Icon(Icons.add),
+        onPressed: () async {
+          await Navigator.pushNamed(context, '/add');
+          loadPasswords(); // refresh list after return
+        },
       ),
     );
   }

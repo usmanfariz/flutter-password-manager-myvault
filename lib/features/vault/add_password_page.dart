@@ -11,15 +11,15 @@ class AddPasswordPage extends StatelessWidget {
 
   void save(BuildContext context) async {
     final uuid = Uuid().v4();
-    final title = titleCtrl.text;
-    final username = usernameCtrl.text;
-    final password = passwordCtrl.text;
-    final raw = '$title|$username|$password';
-    final encrypted = EncryptionHelper.encrypt(raw);
+    final title = titleCtrl.text.trim();
+    final username = usernameCtrl.text.trim();
+    final password = passwordCtrl.text.trim();
+
+    final raw = '$title|$username|$password'; // Format gabungan
+    final encrypted = EncryptionHelper.encrypt(raw); // Enkripsi
 
     await storage.write(uuid, encrypted);
-    Navigator.pop(context);
-    
+    Navigator.pop(context); // Kembali ke halaman sebelumnya
   }
 
   @override
@@ -30,9 +30,15 @@ class AddPasswordPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(controller: titleCtrl, decoration: InputDecoration(labelText: 'Title')),
-            TextField(controller: usernameCtrl, decoration: InputDecoration(labelText: 'Username')),
-            TextField(controller: passwordCtrl, decoration: InputDecoration(labelText: 'Password')),
+            TextField(
+                controller: titleCtrl,
+                decoration: InputDecoration(labelText: 'Title')),
+            TextField(
+                controller: usernameCtrl,
+                decoration: InputDecoration(labelText: 'Username')),
+            TextField(
+                controller: passwordCtrl,
+                decoration: InputDecoration(labelText: 'Password')),
             SizedBox(height: 20),
             ElevatedButton(onPressed: () => save(context), child: Text('Save'))
           ],

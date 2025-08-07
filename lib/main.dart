@@ -16,8 +16,8 @@ class MyVaultApp extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.blue),
       initialRoute: '/',
       routes: {
-        '/': (_) => AuthPage(), // <- ini untuk autentikasi
-        '/vault': (_) => VaultPage(), // <- akses setelah berhasil
+        '/': (_) => AuthPage(),
+        '/vault': (_) => VaultPage(),
         '/add': (_) => AddPasswordPage(),
       },
     );

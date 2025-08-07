@@ -5,20 +5,20 @@ class AuthHelper {
 
   static Future<bool> authenticate() async {
     try {
-      bool canCheckBiometrics = await _auth.canCheckBiometrics;
-      bool isDeviceSupported = await _auth.isDeviceSupported();
+      final isAvailable = await _auth.canCheckBiometrics;
+      final isSupported = await _auth.isDeviceSupported();
 
-      if (!canCheckBiometrics || !isDeviceSupported) return false;
+      if (!isAvailable || !isSupported) return false;
 
       return await _auth.authenticate(
-        localizedReason: 'Akses vault dengan sidik jari atau PIN',
+        localizedReason: 'Autentikasi dengan sidik jari atau wajah',
         options: const AuthenticationOptions(
-          biometricOnly: false,
+          biometricOnly: true,
           stickyAuth: true,
         ),
       );
     } catch (e) {
-      print("Auth error: $e");
+      print('Error saat autentikasi: $e');
       return false;
     }
   }
